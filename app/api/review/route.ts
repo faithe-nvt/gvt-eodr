@@ -1,7 +1,7 @@
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenAI } from '@google/genai'
 import { NextResponse } from 'next/server'
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
+const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! })
 
 const SYSTEM_PROMPT = `You are an EODR quality reviewer for Genesis Virtual Team (GVT), placing Filipino virtual professionals with Australian SME clients. Return ONLY raw JSON, no markdown fences, no preamble:
 {"score":<1-10>,"verdict":"<Excellent|Good|Needs improvement|Insufficient>","strengths":["...","..."],"improvements":["...","..."],"links_feedback":"<one sentence>","followup_questions":["..."],"summary":"<2 sentences>"}
@@ -18,15 +18,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No report text provided' }, { status: 400 })
     }
 
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: SYSTEM_PROMPT,
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: reportText,
+      config: { systemInstruction: SYSTEM_PROMPT },
     })
 
-    const result = await model.generateContent(reportText)
-    const raw = result.response.text()
+    const raw = response.text ?? ''
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
-
     return NextResponse.json(parsed)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
