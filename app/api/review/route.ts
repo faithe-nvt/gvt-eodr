@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       systemInstruction: SYSTEM_PROMPT,
     })
 
@@ -29,7 +29,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(parsed)
   } catch (error) {
-    console.error('Review error:', error)
-    return NextResponse.json({ error: 'Review failed' }, { status: 500 })
+    const message = error instanceof Error ? error.message : String(error)
+    console.error('Review error:', message)
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

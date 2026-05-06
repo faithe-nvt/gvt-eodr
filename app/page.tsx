@@ -51,7 +51,7 @@ export default function EODRPage() {
   const [linkCounter, setLinkCounter] = useState(0)
   const [review, setReview] = useState<ReviewResult | null>(null)
   const [loading, setLoading] = useState(false)
-  const [apiError, setApiError] = useState(false)
+  const [apiError, setApiError] = useState<string | null>(null)
   const reviewRef = useRef<HTMLDivElement>(null)
 
   function setField(field: keyof FormState, value: string) {
@@ -99,7 +99,7 @@ export default function EODRPage() {
     }
 
     setLoading(true)
-    setApiError(false)
+    setApiError(null)
     setReview(null)
 
     setTimeout(() => {
@@ -142,11 +142,14 @@ TOMORROW: ${form.tomorrow || 'Not stated'}`
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reportText }),
       })
-      if (!res.ok) throw new Error('API error')
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'API error')
+      }
       const result: ReviewResult = await res.json()
       setReview(result)
-    } catch {
-      setApiError(true)
+    } catch (e) {
+      setApiError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
       setLoading(false)
     }
@@ -168,7 +171,7 @@ TOMORROW: ${form.tomorrow || 'Not stated'}`
     setMood('')
     setLinks([])
     setReview(null)
-    setApiError(false)
+    setApiError(null)
     setLoading(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -408,7 +411,7 @@ TOMORROW: ${form.tomorrow || 'Not stated'}`
             {apiError && (
               <div className="loading-state" style={{ color: '#993C1D' }}>
                 <i className="ti ti-alert-circle" aria-hidden="true" />
-                Could not load review. Please try again.
+                Error: {apiError}
               </div>
             )}
             {review && <ReviewBody review={review} onReset={resetForm} />}
