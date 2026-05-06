@@ -1,7 +1,7 @@
-import { GoogleGenAI } from '@google/genai'
+import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 
-const ai = new GoogleGenAI({ apiKey: process.env.GOOGLE_API_KEY! })
+const client = new Anthropic()
 
 const SYSTEM_PROMPT = `You are an EODR quality reviewer for Genesis Virtual Team (GVT), placing Filipino virtual professionals with Australian SME clients. Return ONLY raw JSON, no markdown fences, no preamble:
 {"score":<1-10>,"verdict":"<Excellent|Good|Needs improvement|Insufficient>","strengths":["...","..."],"improvements":["...","..."],"links_feedback":"<one sentence>","followup_questions":["..."],"summary":"<2 sentences>"}
@@ -18,13 +18,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No report text provided' }, { status: 400 })
     }
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: reportText,
-      config: { systemInstruction: SYSTEM_PROMPT },
+    const message = await client.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 1000,
+      system: SYSTEM_PROMPT,
+      messages: [{ role: 'user', content: reportText }],
     })
 
-    const raw = response.text ?? ''
+    const raw = message.content
+      .filter(block => block.type === 'text')
+      .map(block => (block.type === 'text' ? block.text : ''))
+      .join('')
+
     const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
     return NextResponse.json(parsed)
   } catch (error) {
