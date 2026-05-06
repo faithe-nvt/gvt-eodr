@@ -183,7 +183,9 @@ TOMORROW: ${form.tomorrow || 'Not stated'}`
 
       {/* Header */}
       <div className="gvt-header">
-        <div className="gvt-logo-mark">GV</div>
+        <div className="gvt-logo-mark">
+          <img src="/logo.png" alt="GVT" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+        </div>
         <div>
           <h1>End of Day Report</h1>
           <p>Genesis Virtual Team — daily performance log</p>
