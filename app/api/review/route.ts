@@ -1,7 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { NextResponse } from 'next/server'
 
-const client = new Anthropic()
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!)
 
 const SYSTEM_PROMPT = `You are an EODR quality reviewer for Genesis Virtual Team (GVT), placing Filipino virtual professionals with Australian SME clients. Return ONLY raw JSON, no markdown fences, no preamble:
 {"score":<1-10>,"verdict":"<Excellent|Good|Needs improvement|Insufficient>","strengths":["...","..."],"improvements":["...","..."],"links_feedback":"<one sentence>","followup_questions":["..."],"summary":"<2 sentences>"}
@@ -18,20 +18,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No report text provided' }, { status: 400 })
     }
 
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1000,
-      system: SYSTEM_PROMPT,
-      messages: [{ role: 'user', content: reportText }],
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: SYSTEM_PROMPT,
     })
 
-    const raw = message.content
-      .filter(block => block.type === 'text')
-      .map(block => (block.type === 'text' ? block.text : ''))
-      .join('')
+    const result = await model.generateContent(reportText)
+    const raw = result.response.text()
+    const parsed = JSON.parse(raw.replace(/```json|```/g, '').trim())
 
-    const result = JSON.parse(raw.replace(/```json|```/g, '').trim())
-    return NextResponse.json(result)
+    return NextResponse.json(parsed)
   } catch (error) {
     console.error('Review error:', error)
     return NextResponse.json({ error: 'Review failed' }, { status: 500 })
