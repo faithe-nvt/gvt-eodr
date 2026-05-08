@@ -129,6 +129,10 @@ export default function EODRPage() {
     setApiError(null)
     setReview(null)
 
+    const snapshot: SavedReport = { savedDate: form.date, form, mood, links }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+    setSavedReport(snapshot)
+
     setTimeout(() => {
       reviewRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
     }, 100)
@@ -175,10 +179,6 @@ TOMORROW: ${form.tomorrow || 'Not stated'}`
       }
       const result: ReviewResult = await res.json()
       setReview(result)
-      const snapshot: SavedReport = { savedDate: form.date, form, mood, links }
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
-      setSavedReport(snapshot)
-      setBannerDismissed(false)
     } catch (e) {
       setApiError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
