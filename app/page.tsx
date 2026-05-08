@@ -1,6 +1,15 @@
 'use client'
 
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
+
+const STORAGE_KEY = 'gvt_last_report'
+
+interface SavedReport {
+  savedDate: string
+  form: FormState
+  mood: string
+  links: LinkItem[]
+}
 
 interface LinkItem {
   id: number
@@ -52,10 +61,28 @@ export default function EODRPage() {
   const [review, setReview] = useState<ReviewResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [apiError, setApiError] = useState<string | null>(null)
+  const [savedReport, setSavedReport] = useState<SavedReport | null>(null)
+  const [bannerDismissed, setBannerDismissed] = useState(false)
   const reviewRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) setSavedReport(JSON.parse(raw))
+    } catch {}
+  }, [])
 
   function setField(field: keyof FormState, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
+  }
+
+  function loadPrevious() {
+    if (!savedReport) return
+    setForm({ ...savedReport.form, date: new Date().toISOString().split('T')[0] })
+    setMood(savedReport.mood)
+    setLinks(savedReport.links)
+    setLinkCounter(savedReport.links.length)
+    setBannerDismissed(true)
   }
 
   function addLink() {
@@ -148,6 +175,10 @@ TOMORROW: ${form.tomorrow || 'Not stated'}`
       }
       const result: ReviewResult = await res.json()
       setReview(result)
+      const snapshot: SavedReport = { savedDate: form.date, form, mood, links }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot))
+      setSavedReport(snapshot)
+      setBannerDismissed(false)
     } catch (e) {
       setApiError(e instanceof Error ? e.message : 'Unknown error')
     } finally {
@@ -191,6 +222,39 @@ TOMORROW: ${form.tomorrow || 'Not stated'}`
           <p>Genesis Virtual Team — daily performance log</p>
         </div>
       </div>
+
+      {/* Previous Report Banner */}
+      {savedReport && !bannerDismissed && review === null && (
+        <div style={{
+          background: '#fff', border: '0.5px solid var(--gvt-teal)',
+          borderRadius: 'var(--radius-lg)', padding: '0.9rem 1.25rem',
+          marginBottom: '1rem', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', gap: 12, flexWrap: 'wrap'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <i className="ti ti-history" style={{ color: 'var(--gvt-teal)', fontSize: 18 }} />
+            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+              You have a saved report from <strong>{savedReport.savedDate}</strong>
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={loadPrevious} style={{
+              background: 'var(--gvt-teal)', color: '#fff', border: 'none',
+              borderRadius: 'var(--radius-md)', padding: '7px 14px',
+              fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500
+            }}>
+              Load last report
+            </button>
+            <button onClick={() => setBannerDismissed(true)} style={{
+              background: 'none', border: '0.5px solid var(--border)',
+              borderRadius: 'var(--radius-md)', padding: '7px 14px',
+              fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-tertiary)'
+            }}>
+              Dismiss
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Best Practice Guide */}
       <div className="bp-panel">
