@@ -117,13 +117,13 @@ export default function EODRPage() {
     if (!savedReport) return
     setForm(prev => ({
       ...prev,
-      pending: savedReport.form.pending,
-      nextActions: savedReport.form.nextActions,
+      pending: savedReport.form?.pending ?? '',
+      nextActions: savedReport.form?.nextActions ?? '',
     }))
     setDelivery(prev => ({
       ...prev,
-      clientName: savedReport.delivery.clientName,
-      clientEmail: savedReport.delivery.clientEmail,
+      clientName: savedReport.delivery?.clientName ?? '',
+      clientEmail: savedReport.delivery?.clientEmail ?? '',
     }))
     setBannerDismissed(true)
   }
