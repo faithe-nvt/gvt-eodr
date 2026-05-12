@@ -12,6 +12,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmed, setConfirmed] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -28,9 +29,38 @@ export default function SignupPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      router.push('/')
-      router.refresh()
+      setConfirmed(true)
+      setLoading(false)
     }
+  }
+
+  if (confirmed) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--bg)', padding: '1rem' }}>
+        <div style={{ width: '100%', maxWidth: 400, textAlign: 'center' }}>
+          <div style={{ background: 'var(--gvt-teal)', borderRadius: 12, padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 40, height: 40, background: '#ff611a', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <img src="/logo.png" alt="GVT" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            </div>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: 16, fontWeight: 500, color: '#fff' }}>GVT Reporting</div>
+              <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Account created</div>
+            </div>
+          </div>
+          <div style={{ background: '#fff', borderRadius: 12, border: '0.5px solid var(--border)', padding: '2rem 1.5rem' }}>
+            <div style={{ fontSize: 40, marginBottom: '1rem' }}>📧</div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-primary)', marginBottom: '0.75rem' }}>Check your email</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+              We sent a confirmation link to <strong>{email}</strong>. Click the link in the email to activate your account.
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+              Once confirmed, you can{' '}
+              <a href="/login" style={{ color: 'var(--gvt-teal)', textDecoration: 'none', fontWeight: 500 }}>sign in here</a>.
+            </p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
