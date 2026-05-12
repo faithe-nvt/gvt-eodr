@@ -1,27 +1,23 @@
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { GRADING_PROMPT, DELIVERY_PROMPT } from '@/lib/prompts'
 
-const anthropic = new Anthropic()
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+
+const MODEL = 'llama-3.3-70b-versatile'
 
 function checkEmailMatch(entered: string, trusted: string): string {
   const e = entered.toLowerCase().trim()
   const t = trusted.toLowerCase().trim()
-
   if (e === t) return 'match'
-
   const eDomain = e.split('@')[1] ?? ''
   const tDomain = t.split('@')[1] ?? ''
   const eLocal = e.split('@')[0] ?? ''
   const tLocal = t.split('@')[0] ?? ''
-
   if (eDomain !== tDomain) return 'flagged_new_domain'
-
-  // Levenshtein distance on local part to detect typos
   const dist = levenshtein(eLocal, tLocal)
   if (dist <= 2) return 'flagged_typo'
-
   return 'flagged_different_recipient'
 }
 
@@ -43,9 +39,7 @@ export async function POST(request: Request) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
-    if (!user) {
-      return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
-    }
+    if (!user) return NextResponse.json({ error: 'Unauthorised' }, { status: 401 })
 
     const { data: profile } = await supabase
       .from('profiles')
@@ -53,9 +47,7 @@ export async function POST(request: Request) {
       .eq('id', user.id)
       .single()
 
-    if (!profile) {
-      return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
-    }
+    if (!profile) return NextResponse.json({ error: 'Profile not found' }, { status: 404 })
 
     const body = await request.json()
     const { formData, clientName, clientEmail, sendToCsm } = body
@@ -77,18 +69,16 @@ export async function POST(request: Request) {
     // ── AI grading ───────────────────────────────────────────────────────────
     const reportText = buildReportText(profile.full_name, clientName, formData)
 
-    const gradingMessage = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    const gradingResponse = await groq.chat.completions.create({
+      model: MODEL,
       max_tokens: 1000,
-      system: [{ type: 'text', text: GRADING_PROMPT, cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: reportText }],
+      messages: [
+        { role: 'system', content: GRADING_PROMPT },
+        { role: 'user', content: reportText },
+      ],
     })
 
-    const gradingRaw = gradingMessage.content
-      .filter(b => b.type === 'text')
-      .map(b => b.type === 'text' ? b.text : '')
-      .join('')
-
+    const gradingRaw = gradingResponse.choices[0]?.message?.content ?? ''
     const grading = JSON.parse(gradingRaw.replace(/```json|```/g, '').trim())
 
     // ── Email generation ─────────────────────────────────────────────────────
@@ -96,7 +86,6 @@ export async function POST(request: Request) {
     const submissionDate = new Date().toLocaleDateString('en-AU', {
       weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
     })
-
     const linksText = (formData.links ?? []).length > 0
       ? (formData.links as { label: string; url: string }[])
           .map(l => `${l.label}: ${l.url}`).join('\n')
@@ -114,22 +103,20 @@ recommendation: ${formData.recommendation ?? ''}
 tomorrow_priority: ${formData.tomorrow ?? ''}
 links: ${linksText}`
 
-    const emailMessage = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 3000,
-      system: [{ type: 'text', text: DELIVERY_PROMPT, cache_control: { type: 'ephemeral' } }],
-      messages: [{ role: 'user', content: deliveryInput }],
+    const emailResponse = await groq.chat.completions.create({
+      model: MODEL,
+      max_tokens: 4000,
+      messages: [
+        { role: 'system', content: DELIVERY_PROMPT },
+        { role: 'user', content: deliveryInput },
+      ],
     })
 
-    const emailRaw = emailMessage.content
-      .filter(b => b.type === 'text')
-      .map(b => b.type === 'text' ? b.text : '')
-      .join('')
-
+    const emailRaw = emailResponse.choices[0]?.message?.content ?? ''
     const emailContent = JSON.parse(emailRaw.replace(/```json|```/g, '').trim())
 
     // ── Save submission ──────────────────────────────────────────────────────
-    const sendStatus = emailMatchStatus === 'match' ? 'pending_verification' : 'pending_verification'
+    const csmEmail = process.env.CSM_EMAIL ?? 'faith.e@netavirtualteam.com.au'
 
     const { data: submission, error: insertError } = await supabase
       .from('eodr_submissions')
@@ -146,14 +133,12 @@ links: ${linksText}`
         email_html: emailContent.html_body,
         email_plain_text: emailContent.plain_text_body,
         send_to_csm: sendToCsm ?? true,
-        send_status: sendStatus,
+        send_status: 'pending_verification',
       })
       .select('id')
       .single()
 
     if (insertError) throw insertError
-
-    const csmEmail = process.env.CSM_EMAIL ?? 'faith.e@netavirtualteam.com.au'
 
     return NextResponse.json({
       submissionId: submission.id,
@@ -165,7 +150,6 @@ links: ${linksText}`
         plainText: emailContent.plain_text_body,
       },
       emailMatchStatus,
-      sendStatus,
       csmEmail,
     })
   } catch (error) {
