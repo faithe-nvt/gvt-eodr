@@ -206,7 +206,7 @@ export default function EODRPage() {
 
   function resetForm() {
     setForm({ date: new Date().toISOString().split('T')[0], hours: '', completed: '', pending: '', nextActions: '', blockers: '', recommendation: '', tomorrow: '' })
-    setDelivery({ clientName: '', clientEmail: '', sendToCsm: true, frequency: 'daily' })
+    setDelivery({ clientName: '', clientEmail: '' })
     setMood('')
     setLinks([])
     setSubmitResult(null)
