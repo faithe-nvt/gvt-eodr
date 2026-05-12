@@ -153,6 +153,8 @@ links: ${linksText}`
 
     if (insertError) throw insertError
 
+    const csmEmail = process.env.CSM_EMAIL ?? 'faith.e@netavirtualteam.com.au'
+
     return NextResponse.json({
       submissionId: submission.id,
       grading,
@@ -164,6 +166,7 @@ links: ${linksText}`
       },
       emailMatchStatus,
       sendStatus,
+      csmEmail,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
