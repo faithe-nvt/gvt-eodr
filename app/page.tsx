@@ -23,8 +23,6 @@ interface FormState {
 interface DeliveryState {
   clientName: string
   clientEmail: string
-  sendToCsm: boolean
-  frequency: 'daily' | 'weekly'
 }
 
 interface SavedReport {
@@ -77,8 +75,6 @@ export default function EODRPage() {
   const [delivery, setDelivery] = useState<DeliveryState>({
     clientName: '',
     clientEmail: '',
-    sendToCsm: true,
-    frequency: 'daily',
   })
   const [mood, setMood] = useState('')
   const [links, setLinks] = useState<LinkItem[]>([])
@@ -192,7 +188,7 @@ export default function EODRPage() {
           formData: { ...form, links },
           clientName: delivery.clientName,
           clientEmail: delivery.clientEmail,
-          sendToCsm: delivery.sendToCsm,
+          sendToCsm: true,
         }),
       })
       if (!res.ok) {
@@ -206,14 +202,6 @@ export default function EODRPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  async function sendTestEmail() {
-    if (!delivery.clientName || !delivery.clientEmail) {
-      alert('Fill in client details first.')
-      return
-    }
-    alert('Test email feature coming soon — Resend integration pending.')
   }
 
   function resetForm() {
@@ -443,43 +431,10 @@ export default function EODRPage() {
             <input type="email" value={delivery.clientEmail} onChange={e => setDeliveryField('clientEmail', e.target.value)} placeholder="client@example.com.au" />
           </div>
         </div>
-        <div className="divider" />
-        <div className="field-group" style={{ marginTop: '0.75rem' }}>
-          <label style={{ cursor: 'pointer', gap: 10 }}>
-            <input
-              type="checkbox"
-              checked={delivery.sendToCsm}
-              onChange={e => setDeliveryField('sendToCsm', e.target.checked)}
-              style={{ width: 'auto', accentColor: 'var(--gvt-teal)' }}
-            />
-            BCC my CSM automatically
-          </label>
+        <div style={{ marginTop: '0.5rem', fontSize: 12, color: 'var(--text-tertiary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <i className="ti ti-info-circle" aria-hidden="true" />
+          Your report will be sent to your client and copied to your CSM automatically.
         </div>
-        <div className="field-group" style={{ marginTop: '0.75rem' }}>
-          <label><i className="ti ti-repeat" aria-hidden="true" /> Report frequency</label>
-          <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-            {(['daily', 'weekly'] as const).map(opt => (
-              <label key={opt} style={{ cursor: 'pointer', fontWeight: 400, gap: 6 }}>
-                <input
-                  type="radio"
-                  name="frequency"
-                  value={opt}
-                  checked={delivery.frequency === opt}
-                  onChange={() => setDeliveryField('frequency', opt)}
-                  style={{ width: 'auto', accentColor: 'var(--gvt-teal)' }}
-                />
-                {opt.charAt(0).toUpperCase() + opt.slice(1)}
-              </label>
-            ))}
-          </div>
-        </div>
-        <div className="divider" />
-        <button
-          onClick={sendTestEmail}
-          style={{ fontSize: 13, color: 'var(--gvt-teal)', background: 'none', border: '0.5px dashed var(--gvt-teal)', borderRadius: 'var(--radius-md)', padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
-        >
-          <i className="ti ti-send" aria-hidden="true" /> Send test to myself
-        </button>
       </div>
 
       <button className="submit-btn" onClick={submitReport} disabled={loading}>
