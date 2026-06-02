@@ -150,7 +150,7 @@ links: ${linksText}`
         from: `GVT Reporting <${FROM_EMAIL}>`,
         to: [clientEmail],
         bcc: [csmEmail],
-        reply_to: profile.email,
+        replyTo: profile.email,
         subject: emailContent.subject,
         html: emailContent.html_body,
         text: emailContent.plain_text_body,
