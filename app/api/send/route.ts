@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM_EMAIL = 'reports@netavirtualteam.com.au'
+const FROM_EMAIL = 'reports@connect.netavirtualteam.com.au'
 
 export async function POST(request: Request) {
   try {
