@@ -122,7 +122,6 @@ export function buildEmailHtml(
                 <td style="padding:16px 20px;vertical-align:middle;width:160px;">
                   <img src="https://www.netavirtualteam.com.au/_next/image?url=%2Fimages%2Flogo-dark.png&w=256&q=75" alt="NVT Logo" width="130" style="display:block;">
                 </td>
-                <td style="width:1px;background:#1e3a3c;padding:12px 0;">&nbsp;</td>
                 <td style="padding:16px 28px;text-align:right;vertical-align:middle;">
                   <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:#4a9a9b;margin-bottom:4px;">End of Day Report</div>
                   <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;margin-bottom:4px;">${escHtml(vpName)}</div>

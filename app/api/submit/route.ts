@@ -8,6 +8,24 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 const MODEL = 'llama-3.3-70b-versatile'
 
+function parseJson(raw: string) {
+  const cleaned = raw.replace(/```json|```/g, '').trim()
+  try {
+    return JSON.parse(cleaned)
+  } catch {
+    // Strip control characters that break JSON (literal newlines inside strings)
+    const sanitised = cleaned.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '')
+      .replace(/\n/g, '\\n').replace(/\r/g, '')
+    try {
+      return JSON.parse(sanitised)
+    } catch {
+      const match = cleaned.match(/\{[\s\S]*\}/)
+      if (match) return JSON.parse(match[0])
+      throw new Error('Could not parse AI response as JSON')
+    }
+  }
+}
+
 function checkEmailMatch(entered: string, trusted: string): string {
   const e = entered.toLowerCase().trim()
   const t = trusted.toLowerCase().trim()
@@ -80,7 +98,7 @@ export async function POST(request: Request) {
     })
 
     const gradingRaw = gradingResponse.choices[0]?.message?.content ?? ''
-    const grading = JSON.parse(gradingRaw.replace(/```json|```/g, '').trim())
+    const grading = parseJson(gradingRaw)
 
     // ── Email generation ─────────────────────────────────────────────────────
     const vpFirstName = profile.full_name.split(' ')[0]
@@ -114,7 +132,7 @@ links: ${linksText}`
     })
 
     const emailRaw = emailResponse.choices[0]?.message?.content ?? ''
-    const emailContent: EmailContent = JSON.parse(emailRaw.replace(/```json|```/g, '').trim())
+    const emailContent: EmailContent = parseJson(emailRaw)
     const emailHtml = buildEmailHtml(profile.full_name, submissionDate, emailContent)
 
     // ── Save submission ──────────────────────────────────────────────────────
