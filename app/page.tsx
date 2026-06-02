@@ -44,10 +44,10 @@ interface ReviewResult {
 }
 
 interface SubmitResult {
+  submissionId: string
   grading: ReviewResult
   emailPreview: { subject: string; previewText: string; html: string; plainText: string }
   emailMatchStatus: string
-  sendStatus: string
 }
 
 const MOOD_OPTIONS = ['Excellent', 'Good', 'Challenging', 'Difficult']
@@ -486,6 +486,31 @@ function ReviewBody({ result, showEmailPreview, onToggleEmail, onReset }: {
   onToggleEmail: () => void
   onReset: () => void
 }) {
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+  const [sendError, setSendError] = useState('')
+
+  async function handleSend() {
+    setSending(true)
+    setSendError('')
+    try {
+      const res = await fetch('/api/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId: result.submissionId }),
+      })
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error || 'Send failed')
+      }
+      setSent(true)
+    } catch (e) {
+      setSendError(e instanceof Error ? e.message : 'Send failed')
+    } finally {
+      setSending(false)
+    }
+  }
+
   const { grading, emailPreview, emailMatchStatus } = result
   const isGood = grading.score >= 7
   const matchInfo = EMAIL_MATCH_LABELS[emailMatchStatus] ?? { label: emailMatchStatus, color: '#555550' }
@@ -540,13 +565,34 @@ function ReviewBody({ result, showEmailPreview, onToggleEmail, onReset }: {
             {matchInfo.label}
           </span>
         </div>
-        <button
-          onClick={onToggleEmail}
-          style={{ fontSize: 13, color: 'var(--gvt-teal)', background: 'var(--gvt-mint-bg)', border: '0.5px solid rgba(45,95,94,0.2)', borderRadius: 'var(--radius-md)', padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
-        >
-          <i className={`ti ${showEmailPreview ? 'ti-eye-off' : 'ti-eye'}`} aria-hidden="true" />
-          {showEmailPreview ? 'Hide email preview' : 'Preview client email'}
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button
+            onClick={onToggleEmail}
+            style={{ fontSize: 13, color: 'var(--gvt-teal)', background: 'var(--gvt-mint-bg)', border: '0.5px solid rgba(45,95,94,0.2)', borderRadius: 'var(--radius-md)', padding: '8px 14px', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            <i className={`ti ${showEmailPreview ? 'ti-eye-off' : 'ti-eye'}`} aria-hidden="true" />
+            {showEmailPreview ? 'Hide preview' : 'Preview email'}
+          </button>
+          {!sent ? (
+            <button
+              onClick={handleSend}
+              disabled={sending}
+              style={{ fontSize: 13, color: '#fff', background: 'var(--gvt-teal)', border: 'none', borderRadius: 'var(--radius-md)', padding: '8px 16px', cursor: sending ? 'not-allowed' : 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 6, opacity: sending ? 0.6 : 1 }}
+            >
+              <i className={`ti ${sending ? 'ti-loader' : 'ti-send'}`} aria-hidden="true" />
+              {sending ? 'Sending...' : 'Send to client'}
+            </button>
+          ) : (
+            <div style={{ fontSize: 13, color: '#0A505A', background: 'var(--gvt-mint-bg)', border: '0.5px solid rgba(45,95,94,0.3)', borderRadius: 'var(--radius-md)', padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <i className="ti ti-circle-check" aria-hidden="true" /> Sent successfully
+            </div>
+          )}
+        </div>
+        {sendError && (
+          <div style={{ marginTop: 8, fontSize: 13, color: '#993C1D', padding: '8px 12px', background: '#FEF3EE', borderRadius: 8 }}>
+            {sendError}
+          </div>
+        )}
         {showEmailPreview && (
           <div style={{ marginTop: 12, border: '0.5px solid var(--border)', borderRadius: 8, overflow: 'hidden' }}>
             <iframe
