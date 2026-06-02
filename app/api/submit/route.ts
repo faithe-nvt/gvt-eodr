@@ -2,6 +2,7 @@ import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { GRADING_PROMPT, DELIVERY_PROMPT } from '@/lib/prompts'
+import { buildEmailHtml, type EmailContent } from '@/lib/email-template'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
@@ -113,7 +114,8 @@ links: ${linksText}`
     })
 
     const emailRaw = emailResponse.choices[0]?.message?.content ?? ''
-    const emailContent = JSON.parse(emailRaw.replace(/```json|```/g, '').trim())
+    const emailContent: EmailContent = JSON.parse(emailRaw.replace(/```json|```/g, '').trim())
+    const emailHtml = buildEmailHtml(profile.full_name, submissionDate, emailContent)
 
     // ── Save submission ──────────────────────────────────────────────────────
     const csmEmail = process.env.CSM_EMAIL ?? 'faith.e@netavirtualteam.com.au'
@@ -130,7 +132,7 @@ links: ${linksText}`
         ai_grade: grading.score,
         ai_feedback: grading,
         email_subject: emailContent.subject,
-        email_html: emailContent.html_body,
+        email_html: emailHtml,
         email_plain_text: emailContent.plain_text_body,
         send_to_csm: sendToCsm ?? true,
         send_status: 'pending_verification',
@@ -146,7 +148,7 @@ links: ${linksText}`
       emailPreview: {
         subject: emailContent.subject,
         previewText: emailContent.preview_text,
-        html: emailContent.html_body,
+        html: emailHtml,
         plainText: emailContent.plain_text_body,
       },
       emailMatchStatus,
