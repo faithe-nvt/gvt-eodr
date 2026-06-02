@@ -1,11 +1,14 @@
 import Groq from 'groq-sdk'
+import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { GRADING_PROMPT, DELIVERY_PROMPT } from '@/lib/prompts'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 const MODEL = 'llama-3.3-70b-versatile'
+const FROM_EMAIL = 'reports@netavirtualteam.com.au'
 
 function checkEmailMatch(entered: string, trusted: string): string {
   const e = entered.toLowerCase().trim()
@@ -140,6 +143,36 @@ links: ${linksText}`
 
     if (insertError) throw insertError
 
+    // ── Send email via Resend ────────────────────────────────────────────────
+    let sendStatus = 'pending_verification'
+    try {
+      const { data: sendData, error: sendError } = await resend.emails.send({
+        from: `GVT Reporting <${FROM_EMAIL}>`,
+        to: [clientEmail],
+        bcc: [csmEmail],
+        reply_to: profile.email,
+        subject: emailContent.subject,
+        html: emailContent.html_body,
+        text: emailContent.plain_text_body,
+      })
+
+      if (sendError) throw sendError
+
+      // Log the send
+      await supabase.from('email_send_log').insert([
+        { submission_id: submission.id, recipient_email: clientEmail, recipient_type: 'client', resend_message_id: sendData?.id, status: 'sent' },
+        { submission_id: submission.id, recipient_email: csmEmail, recipient_type: 'csm_bcc', resend_message_id: sendData?.id, status: 'sent' },
+      ])
+
+      // Update submission send status
+      await supabase.from('eodr_submissions').update({ send_status: 'sent', sent_at: new Date().toISOString() }).eq('id', submission.id)
+
+      sendStatus = 'sent'
+    } catch (emailError) {
+      console.error('Email send error:', emailError)
+      sendStatus = 'failed'
+    }
+
     return NextResponse.json({
       submissionId: submission.id,
       grading,
@@ -150,6 +183,7 @@ links: ${linksText}`
         plainText: emailContent.plain_text_body,
       },
       emailMatchStatus,
+      sendStatus,
       csmEmail,
     })
   } catch (error) {
