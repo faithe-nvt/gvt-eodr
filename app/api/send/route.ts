@@ -27,7 +27,7 @@ export async function POST(request: Request) {
     const vpEmail = (submission.profiles as { email: string })?.email ?? ''
 
     const { data: sendData, error: sendError } = await resend.emails.send({
-      from: `GVT Reporting <${FROM_EMAIL}>`,
+      from: `NVT Daily Brief <${FROM_EMAIL}>`,
       to: [submission.client_email_entered],
       bcc: [csmEmail],
       replyTo: vpEmail,

@@ -19,20 +19,20 @@ export function buildEmailHtml(
 
   const completedItems = content.completed_today.map(item => `
         <li class="task-item done">
-          <span class="task-tag">Done</span>
-          <span class="task-text"><strong>${escHtml(item.label)}:</strong> ${escHtml(item.description)}</span>
+          <span class="task-tag-cell"><span class="task-tag">Done</span></span>
+          <span class="task-text-cell task-text"><strong>${escHtml(item.label)}:</strong> ${escHtml(item.description)}</span>
         </li>`).join('')
 
   const inProgressItems = content.in_progress.map(item => `
         <li class="task-item inprog">
-          <span class="task-tag yellow">Active</span>
-          <span class="task-text">${escHtml(item)}</span>
+          <span class="task-tag-cell"><span class="task-tag yellow">Active</span></span>
+          <span class="task-text-cell task-text">${escHtml(item)}</span>
         </li>`).join('')
 
   const tomorrowItems = content.tomorrow_focus.map(item => `
         <li class="task-item tomorrow">
-          <span class="task-tag orange">Tomorrow</span>
-          <span class="task-text">${escHtml(item)}</span>
+          <span class="task-tag-cell"><span class="task-tag orange">Tomorrow</span></span>
+          <span class="task-text-cell task-text">${escHtml(item)}</span>
         </li>`).join('')
 
   const attentionSection = content.for_your_attention ? `
@@ -85,8 +85,10 @@ export function buildEmailHtml(
   .dot-orange { background: #FF611A; }
   .dot-dark { background: #0a1a1b; }
   .section-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #6b7a7b; font-weight: 500; }
-  .task-list { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .task-item { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; background: #f7f7f5; border-left: 3px solid #e8e8e4; border-radius: 0 4px 4px 0; }
+  .task-list { list-style: none; display: block; }
+  .task-item { display: table; width: 100%; margin-bottom: 10px; padding: 12px 14px; background: #f7f7f5; border-left: 3px solid #e8e8e4; border-radius: 0 4px 4px 0; }
+  .task-tag-cell { display: table-cell; vertical-align: top; padding-right: 12px; white-space: nowrap; }
+  .task-text-cell { display: table-cell; vertical-align: top; width: 100%; }
   .task-item.done { border-left-color: #075056; }
   .task-item.inprog { border-left-color: #EBDB1E; }
   .task-item.tomorrow { border-left-color: #FF611A; }
