@@ -17,6 +17,7 @@ RULES
 - Do not fabricate or pad content
 - Only include for_your_attention if blockers were provided
 - Only include recommendation if the VP provided one
+- For links: match each link to its most relevant completed task using label similarity. A link belongs to a task if its label mentions the same project or topic. Links that cannot be confidently matched to any task go into work_outputs. work_outputs should always be included even if empty.
 
 OUTPUT FORMAT — return raw JSON only, no markdown fences, no preamble:
 
@@ -25,13 +26,24 @@ OUTPUT FORMAT — return raw JSON only, no markdown fences, no preamble:
   "preview_text": "<60-90 char preview for email clients>",
   "opening_summary": "<1-2 confident sentences summarising the day — no filler>",
   "completed_today": [
-    { "label": "<project or task group name>", "description": "<outcome-focused sentence, preserve specifics>" }
+    {
+      "label": "<project or task group name>",
+      "bullets": ["<outcome-focused point>", "<another point>"],
+      "link": { "text": "<descriptive link label e.g. View Content Calendar>", "url": "<url>" }
+    }
   ],
   "in_progress": ["<item>", "<item>"],
   "for_your_attention": "<blocker text if exists, otherwise omit this key>",
   "recommendation": "<VP recommendation rewritten clearly, preserve original idea, omit key if none>",
   "tomorrow_focus": ["<item>", "<item>"],
+  "work_outputs": [
+    { "text": "<descriptive label>", "url": "<url>" }
+  ],
   "plain_text_body": "<plain text version of the full report>"
 }
 
-Group completed_today items by project where the VP has done so. Each item needs a clear label and outcome-focused description.`
+Notes:
+- completed_today.link is optional per item — only include if a link was matched to that task
+- work_outputs is always present (empty array if no unmatched links)
+- Split each task's description into 2-4 concise bullet points
+- Group by project where the VP has done so`

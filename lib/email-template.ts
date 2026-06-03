@@ -2,11 +2,16 @@ export interface EmailContent {
   subject: string
   preview_text: string
   opening_summary: string
-  completed_today: { label: string; description: string }[]
+  completed_today: {
+    label: string
+    bullets: string[]
+    link?: { text: string; url: string }
+  }[]
   in_progress: string[]
   for_your_attention?: string
   recommendation?: string
   tomorrow_focus: string[]
+  work_outputs: { text: string; url: string }[]
   plain_text_body: string
 }
 
@@ -17,33 +22,62 @@ export function buildEmailHtml(
 ): string {
   const firstName = vpName.split(' ')[0]
 
-  const completedItems = content.completed_today.map(item => `
+  const completedItems = content.completed_today.map(item => {
+    const bullets = (item.bullets ?? []).map(b => `
+              <tr>
+                <td style="padding:2px 0 2px 14px;font-size:13px;line-height:1.55;color:#1a2e2f;position:relative;">
+                  <span style="color:#9ab0b1;margin-right:6px;">–</span>${escHtml(b)}
+                </td>
+              </tr>`).join('')
+
+    const linkRow = item.link ? `
+            <tr>
+              <td style="padding-top:8px;border-top:1px solid #e4e9e9;margin-top:4px;">
+                <a href="${escAttr(item.link.url)}" style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:700;color:#075056;text-decoration:underline;text-underline-offset:3px;display:inline-block;">
+                  ↗ ${escHtml(item.link.text)}
+                </a>
+              </td>
+            </tr>` : ''
+
+    return `
     <tr>
       <td style="padding:0 0 10px 0;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid #075056;border-radius:0 4px 4px 0;background:#f7f7f5;">
           <tr>
-            <td style="padding:12px 14px;vertical-align:top;width:1%;white-space:nowrap;">
-              <span style="font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff;background:#075056;padding:2px 7px;border-radius:2px;display:inline-block;">Done</span>
-            </td>
-            <td style="padding:12px 14px 12px 0;vertical-align:top;font-size:13px;line-height:1.55;color:#1a2e2f;">
-              <strong style="font-weight:600;color:#075056;">${escHtml(item.label)}:</strong> ${escHtml(item.description)}
+            <td style="padding:12px 14px 4px 14px;">
+              <table cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:10px;white-space:nowrap;">
+                    <span style="font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff;background:#075056;padding:2px 7px;border-radius:2px;display:inline-block;">Done</span>
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:11px;font-weight:600;color:#075056;line-height:1.3;">${escHtml(item.label)}</span>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
+          <tr>
+            <td style="padding:6px 14px 0 14px;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0">${bullets}
+              </table>
+            </td>
+          </tr>
+          ${linkRow ? `<tr><td style="padding:8px 14px 12px 14px;">${linkRow.trim()}</td></tr>` : `<tr><td style="height:12px;"></td></tr>`}
         </table>
       </td>
-    </tr>`).join('')
+    </tr>`
+  }).join('')
 
   const inProgressItems = content.in_progress.map(item => `
     <tr>
-      <td style="padding:0 0 10px 0;">
+      <td style="padding:0 0 8px 0;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid #EBDB1E;border-radius:0 4px 4px 0;background:#f7f7f5;">
           <tr>
-            <td style="padding:12px 14px;vertical-align:top;width:1%;white-space:nowrap;">
+            <td style="padding:10px 14px;vertical-align:top;width:1%;white-space:nowrap;">
               <span style="font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#0a1a1b;background:#b8a800;padding:2px 7px;border-radius:2px;display:inline-block;">Active</span>
             </td>
-            <td style="padding:12px 14px 12px 0;vertical-align:top;font-size:13px;line-height:1.55;color:#1a2e2f;">
-              ${escHtml(item)}
-            </td>
+            <td style="padding:10px 14px 10px 0;vertical-align:top;font-size:13px;line-height:1.5;color:#1a2e2f;">${escHtml(item)}</td>
           </tr>
         </table>
       </td>
@@ -51,53 +85,79 @@ export function buildEmailHtml(
 
   const tomorrowItems = content.tomorrow_focus.map(item => `
     <tr>
-      <td style="padding:0 0 10px 0;">
+      <td style="padding:0 0 8px 0;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:3px solid #FF611A;border-radius:0 4px 4px 0;background:#f7f7f5;">
           <tr>
-            <td style="padding:12px 14px;vertical-align:top;width:1%;white-space:nowrap;">
+            <td style="padding:10px 14px;vertical-align:top;width:1%;white-space:nowrap;">
               <span style="font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:#ffffff;background:#FF611A;padding:2px 7px;border-radius:2px;display:inline-block;">Tomorrow</span>
             </td>
-            <td style="padding:12px 14px 12px 0;vertical-align:top;font-size:13px;line-height:1.55;color:#1a2e2f;">
-              ${escHtml(item)}
-            </td>
+            <td style="padding:10px 14px 10px 0;vertical-align:top;font-size:13px;line-height:1.5;color:#1a2e2f;">${escHtml(item)}</td>
           </tr>
         </table>
       </td>
     </tr>`).join('')
 
   const attentionSection = content.for_your_attention ? `
-    <tr><td style="padding-top:32px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-bottom:1px solid #e8e8e4;">
-        <tr>
-          <td style="padding-bottom:10px;vertical-align:middle;width:18px;">
-            <div style="width:8px;height:8px;border-radius:2px;background:#EBDB1E;display:inline-block;"></div>
-          </td>
-          <td style="padding-bottom:10px;vertical-align:middle;">
-            <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6b7a7b;font-weight:500;">For Your Attention</span>
-          </td>
-        </tr>
-      </table>
-      <div style="background:#fff8e6;border:1px solid #EBDB1E;border-left:4px solid #EBDB1E;border-radius:0 6px 6px 0;padding:16px 18px;font-size:13px;line-height:1.6;color:#2a1f00;">
-        ${escHtml(content.for_your_attention)}
-      </div>
-    </td></tr>` : ''
+              <tr><td style="padding-top:32px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-bottom:1px solid #e8e8e4;">
+                  <tr>
+                    <td style="padding-bottom:10px;vertical-align:middle;width:18px;">
+                      <div style="width:8px;height:8px;border-radius:2px;background:#EBDB1E;display:inline-block;"></div>
+                    </td>
+                    <td style="padding-bottom:10px;vertical-align:middle;">
+                      <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6b7a7b;font-weight:500;">For Your Attention</span>
+                    </td>
+                  </tr>
+                </table>
+                <div style="background:#fff8e6;border:1px solid #EBDB1E;border-left:4px solid #EBDB1E;border-radius:0 6px 6px 0;padding:16px 18px;font-size:13px;line-height:1.6;color:#2a1f00;">
+                  ${escHtml(content.for_your_attention)}
+                </div>
+              </td></tr>` : ''
 
   const recommendationSection = content.recommendation ? `
-    <tr><td style="padding-top:32px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-bottom:1px solid #e8e8e4;">
-        <tr>
-          <td style="padding-bottom:10px;vertical-align:middle;width:18px;">
-            <div style="width:8px;height:8px;border-radius:2px;background:#FF611A;display:inline-block;"></div>
-          </td>
-          <td style="padding-bottom:10px;vertical-align:middle;">
-            <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6b7a7b;font-weight:500;">${escHtml(firstName)}'s Recommendation for Your Business</span>
-          </td>
-        </tr>
-      </table>
-      <div style="background:#fff3ee;border:1px solid #FF611A;border-left:4px solid #FF611A;border-radius:0 6px 6px 0;padding:16px 18px 16px 20px;font-size:13px;line-height:1.6;color:#2a0f00;font-style:italic;">
-        <span style="display:inline-block;font-size:36px;line-height:1;color:#FF611A;font-style:normal;font-family:Georgia,serif;vertical-align:-10px;margin-right:4px;">&#8220;</span>${escHtml(content.recommendation)}
-      </div>
-    </td></tr>` : ''
+              <tr><td style="padding-top:32px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-bottom:1px solid #e8e8e4;">
+                  <tr>
+                    <td style="padding-bottom:10px;vertical-align:middle;width:18px;">
+                      <div style="width:8px;height:8px;border-radius:2px;background:#FF611A;display:inline-block;"></div>
+                    </td>
+                    <td style="padding-bottom:10px;vertical-align:middle;">
+                      <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6b7a7b;font-weight:500;">${escHtml(firstName)}'s Recommendation for Your Business</span>
+                    </td>
+                  </tr>
+                </table>
+                <div style="background:#fff3ee;border:1px solid #FF611A;border-left:4px solid #FF611A;border-radius:0 6px 6px 0;padding:16px 18px 16px 20px;font-size:13px;line-height:1.6;color:#2a0f00;font-style:italic;">
+                  <span style="display:inline-block;font-size:36px;line-height:1;color:#FF611A;font-style:normal;font-family:Georgia,serif;vertical-align:-10px;margin-right:4px;">&#8220;</span>${escHtml(content.recommendation)}
+                </div>
+              </td></tr>` : ''
+
+  const workOutputs = content.work_outputs ?? []
+  const workOutputRows = workOutputs.map(link => `
+                <tr>
+                  <td style="padding:0 0 8px 0;">
+                    <a href="${escAttr(link.url)}" style="font-family:'DM Sans',Arial,sans-serif;font-size:13px;font-weight:700;color:#075056;text-decoration:underline;text-underline-offset:3px;display:inline-block;">
+                      ↗ ${escHtml(link.text)}
+                    </a>
+                  </td>
+                </tr>`).join('')
+
+  const workOutputsSection = `
+              <tr><td style="padding-top:32px;">
+                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:16px;border-bottom:1px solid #e8e8e4;">
+                  <tr>
+                    <td style="padding-bottom:10px;vertical-align:middle;width:18px;">
+                      <div style="width:8px;height:8px;border-radius:2px;background:#075056;display:inline-block;"></div>
+                    </td>
+                    <td style="padding-bottom:10px;vertical-align:middle;">
+                      <span style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#6b7a7b;font-weight:500;">Work Outputs</span>
+                    </td>
+                  </tr>
+                </table>
+                ${workOutputs.length > 0
+                  ? `<table width="100%" cellpadding="0" cellspacing="0" border="0">${workOutputRows}</table>`
+                  : `<p style="font-size:13px;color:#9ab0b1;font-style:italic;">No additional links this report.</p>`
+                }
+              </td></tr>`
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -192,6 +252,9 @@ export function buildEmailHtml(
                 <table width="100%" cellpadding="0" cellspacing="0" border="0">${tomorrowItems}</table>
               </td></tr>
 
+              <!-- Work Outputs (always shown) -->
+              ${workOutputsSection}
+
             </table>
           </td>
         </tr>
@@ -223,10 +286,14 @@ export function buildEmailHtml(
 </html>`
 }
 
-function escHtml(str: string): string {
+function escHtml(str: string | undefined): string {
   return (str ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+}
+
+function escAttr(str: string | undefined): string {
+  return (str ?? '').replace(/"/g, '&quot;')
 }
