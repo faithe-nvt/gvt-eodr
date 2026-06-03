@@ -24,12 +24,13 @@ export async function POST(request: Request) {
     if (submission.send_status === 'sent') return NextResponse.json({ error: 'Already sent' }, { status: 400 })
 
     const csmEmail = process.env.CSM_EMAIL ?? 'faith.e@netavirtualteam.com.au'
+    const bccList = [csmEmail, 'elle.m@genvt.com']
     const vpEmail = (submission.profiles as { email: string })?.email ?? ''
 
     const { data: sendData, error: sendError } = await resend.emails.send({
       from: `NVT Daily Brief <${FROM_EMAIL}>`,
       to: [submission.client_email_entered],
-      bcc: [csmEmail],
+      bcc: bccList,
       replyTo: vpEmail,
       subject: submission.email_subject,
       html: submission.email_html,
