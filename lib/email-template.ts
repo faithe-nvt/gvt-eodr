@@ -15,10 +15,16 @@ export interface EmailContent {
   plain_text_body: string
 }
 
+export interface VPBadges {
+  streak: number
+  qualityCount: number
+}
+
 export function buildEmailHtml(
   vpName: string,
   submissionDate: string,
-  content: EmailContent
+  content: EmailContent,
+  badges?: VPBadges
 ): string {
   const firstName = vpName.split(' ')[0]
 
@@ -265,8 +271,13 @@ export function buildEmailHtml(
             <table width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td style="vertical-align:middle;">
-                  <div style="font-size:13px;font-weight:600;color:#ffffff;margin-bottom:2px;">${escHtml(vpName)}</div>
-                  <div style="font-size:10px;color:#6b9a9b;">Virtual Professional &ndash; NVT</div>
+                  <div style="font-size:13px;font-weight:600;color:#ffffff;margin-bottom:3px;">${escHtml(vpName)}</div>
+                  <div style="font-size:10px;color:#6b9a9b;margin-bottom:5px;">Virtual Professional &ndash; NVT</div>
+                  ${badges && (badges.streak >= 2 || badges.qualityCount >= 1) ? `
+                  <div style="display:inline-block;">
+                    ${badges.streak >= 2 ? `<span style="display:inline-block;background:#FF611A;color:#ffffff;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;margin-right:4px;font-family:'DM Mono',monospace;letter-spacing:0.05em;">${badges.streak}-DAY STREAK</span>` : ''}
+                    ${badges.qualityCount >= 1 ? `<span style="display:inline-block;background:#075056;color:#5CE8C8;font-size:9px;font-weight:600;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:0.05em;">${badges.qualityCount} QUALITY REPORTS</span>` : ''}
+                  </div>` : ''}
                 </td>
                 <td style="vertical-align:middle;text-align:right;">
                   <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:#EBDB1E;margin-bottom:2px;">NVT Daily Brief</div>

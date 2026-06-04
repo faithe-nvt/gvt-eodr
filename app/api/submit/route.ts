@@ -2,11 +2,26 @@ import Groq from 'groq-sdk'
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { GRADING_PROMPT, DELIVERY_PROMPT } from '@/lib/prompts'
-import { buildEmailHtml, type EmailContent } from '@/lib/email-template'
+import { buildEmailHtml, type EmailContent, type VPBadges } from '@/lib/email-template'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 const MODEL = 'llama-3.1-8b-instant'
+
+function calcStreak(dates: string[]): number {
+  if (!dates.length) return 0
+  const unique = [...new Set(dates.map(d => d.split('T')[0]))].sort().reverse()
+  const today = new Date().toLocaleDateString('en-CA')
+  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA')
+  if (unique[0] !== today && unique[0] !== yesterday) return 0
+  let streak = 1
+  for (let i = 1; i < unique.length; i++) {
+    const prev = new Date(unique[i - 1]), curr = new Date(unique[i])
+    if (Math.round((prev.getTime() - curr.getTime()) / 86400000) === 1) streak++
+    else break
+  }
+  return streak
+}
 
 function parseJson(raw: string) {
   const cleaned = raw.replace(/```json|```/g, '').trim()
@@ -133,7 +148,20 @@ links: ${linksText}`
 
     const emailRaw = emailResponse.choices[0]?.message?.content ?? ''
     const emailContent: EmailContent = parseJson(emailRaw)
-    const emailHtml = buildEmailHtml(profile.full_name, submissionDate, emailContent)
+
+    // Calculate badges for email footer
+    const { data: pastSubs } = await supabase
+      .from('eodr_submissions')
+      .select('created_at, ai_grade')
+      .eq('vp_user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(100)
+
+    const qualityCount = (pastSubs ?? []).filter(s => (s.ai_grade ?? 0) >= 8).length
+    const streak = calcStreak((pastSubs ?? []).map(s => s.created_at))
+    const badges: VPBadges = { streak, qualityCount }
+
+    const emailHtml = buildEmailHtml(profile.full_name, submissionDate, emailContent, badges)
 
     // ── Save submission ──────────────────────────────────────────────────────
     const csmEmail = process.env.CSM_EMAIL ?? 'faith.e@netavirtualteam.com.au'
