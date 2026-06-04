@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import HistoryTab from './components/HistoryTab'
 import TasksTab from './components/TasksTab'
+import ShiftTracker, { type ShiftState } from './components/ShiftTracker'
 
 type Tab = 'today' | 'history' | 'tasks'
 
@@ -99,6 +100,8 @@ export default function EODRPage() {
   const [sent, setSent] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>('today')
   const [badge, setBadge] = useState<Badge>({ streak: 0, qualityCount: 0 })
+  const [shift, setShift] = useState<ShiftState>({ status: 'idle', startTime: null, endTime: null, date: '' })
+  const shiftEnded = shift.status === 'ended'
   const reviewRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
@@ -339,6 +342,11 @@ export default function EODRPage() {
       {/* Today Tab */}
       {activeTab === 'today' && <>
 
+      {/* Shift Tracker */}
+      {profile && (
+        <ShiftTracker vpName={profile.full_name} onShiftChange={setShift} />
+      )}
+
       {/* Previous Report Banner */}
       {savedReport && !bannerDismissed && submitResult === null && (
         <div style={{ background: '#fff', border: '0.5px solid var(--gvt-teal)', borderRadius: 'var(--radius-lg)', padding: '0.9rem 1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
@@ -357,6 +365,12 @@ export default function EODRPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {/* Form — locked until shift ends */}
+      <div style={{ position: 'relative', opacity: shiftEnded ? 1 : 0.4, pointerEvents: shiftEnded ? 'auto' : 'none', transition: 'opacity 0.3s' }}>
+      {!shiftEnded && (
+        <div style={{ position: 'absolute', inset: 0, zIndex: 10, cursor: 'not-allowed' }} title="End your shift to unlock the EODR" />
       )}
 
       {/* Best Practice Guide */}
@@ -601,6 +615,7 @@ export default function EODRPage() {
         </div>
       )}
 
+      </div> {/* end form lock wrapper */}
       </> /* end Today tab */}
 
       <footer>Genesis Virtual Team &copy; 2025 &mdash; EODR System</footer>
