@@ -24,7 +24,7 @@ OUTPUT FORMAT — return raw JSON only, no markdown fences, no preamble:
 {
   "subject": "Daily Report - [VP first name] - [Day, Date]",
   "preview_text": "<60-90 char preview for email clients>",
-  "opening_summary": "<1-2 confident sentences summarising the day — no filler>",
+  "opening_summary": "<3 lines max. Name the specific projects worked on and one standout result. No filler like 'productive day'. Lead with what actually happened.>",
   "completed_today": [
     {
       "label": "<project or task group name>",
