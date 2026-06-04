@@ -6,7 +6,7 @@ import { buildEmailHtml, type EmailContent } from '@/lib/email-template'
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-const MODEL = 'llama-3.3-70b-versatile'
+const MODEL = 'llama-3.1-8b-instant'
 
 function parseJson(raw: string) {
   const cleaned = raw.replace(/```json|```/g, '').trim()
