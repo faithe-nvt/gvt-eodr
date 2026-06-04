@@ -152,7 +152,7 @@ export default function HistoryTab() {
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
                         <strong>Tasks completed:</strong>
                         <div style={{ marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
-                          {String(s.form_data.completed).slice(0, 300)}{String(s.form_data.completed).length > 300 ? '...' : ''}
+                          {(s.form_data.completed as string).slice(0, 300)}{(s.form_data.completed as string).length > 300 ? '...' : ''}
                         </div>
                       </div>
                     )}
