@@ -148,7 +148,7 @@ export default function HistoryTab() {
                         <strong>Subject:</strong> {s.email_subject}
                       </div>
                     )}
-                    {s.form_data?.completed && (
+                    {!!s.form_data?.completed && (
                       <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 10 }}>
                         <strong>Tasks completed:</strong>
                         <div style={{ marginTop: 4, whiteSpace: 'pre-wrap', color: 'var(--text-tertiary)', lineHeight: 1.6 }}>
