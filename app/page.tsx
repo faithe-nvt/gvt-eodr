@@ -4,6 +4,12 @@ export const dynamic = 'force-dynamic'
 
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import HistoryTab from './components/HistoryTab'
+import TasksTab from './components/TasksTab'
+
+type Tab = 'today' | 'history' | 'tasks'
+
+interface Badge { streak: number; qualityCount: number }
 
 const STORAGE_KEY = 'gvt_report_v3'
 const MIN_SCORE_TO_SEND = 7
@@ -91,20 +97,51 @@ export default function EODRPage() {
   const [bannerDismissed, setBannerDismissed] = useState(false)
   const [showEmailPreview, setShowEmailPreview] = useState(false)
   const [sent, setSent] = useState(false)
+  const [activeTab, setActiveTab] = useState<Tab>('today')
+  const [badge, setBadge] = useState<Badge>({ streak: 0, qualityCount: 0 })
   const reviewRef = useRef<HTMLDivElement>(null)
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return
-      supabase.from('profiles').select('full_name, email').eq('id', user.id).single()
-        .then(({ data }) => { if (data) setProfile(data) })
+      const { data: prof } = await supabase.from('profiles').select('full_name, email').eq('id', user.id).single()
+      if (prof) setProfile(prof)
+
+      // Load submissions for badges
+      const { data: subs } = await supabase
+        .from('eodr_submissions')
+        .select('created_at, ai_grade')
+        .eq('vp_user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(100)
+
+      if (subs) {
+        const qualityCount = subs.filter(s => (s.ai_grade ?? 0) >= 8).length
+        const streak = calcStreak(subs.map(s => s.created_at))
+        setBadge({ streak, qualityCount })
+      }
     })
     try {
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) setSavedReport(JSON.parse(raw))
     } catch {}
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  function calcStreak(dates: string[]): number {
+    if (!dates.length) return 0
+    const unique = [...new Set(dates.map(d => d.split('T')[0]))].sort().reverse()
+    const today = new Date().toLocaleDateString('en-CA')
+    const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA')
+    if (unique[0] !== today && unique[0] !== yesterday) return 0
+    let streak = 1
+    for (let i = 1; i < unique.length; i++) {
+      const prev = new Date(unique[i - 1]), curr = new Date(unique[i])
+      if (Math.round((prev.getTime() - curr.getTime()) / 86400000) === 1) streak++
+      else break
+    }
+    return streak
+  }
 
   function setField(field: keyof FormState, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -249,16 +286,58 @@ export default function EODRPage() {
         </div>
         {profile && (
           <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', textAlign: 'right', flexShrink: 0 }}>
-            <div style={{ fontWeight: 500, color: '#fff' }}>{profile.full_name}</div>
+            <div style={{ fontWeight: 500, color: '#fff', marginBottom: 4 }}>{profile.full_name}</div>
+            {/* Badges */}
+            <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end', marginBottom: 4 }}>
+              {badge.streak >= 2 && (
+                <span title={`${badge.streak}-day streak`} style={{ fontSize: 10, background: 'rgba(255,97,26,0.25)', color: '#ff9a6e', padding: '2px 7px', borderRadius: 20, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <i className="ti ti-flame" style={{ fontSize: 11 }} /> {badge.streak}d streak
+                </span>
+              )}
+              {badge.qualityCount >= 1 && (
+                <span title={`${badge.qualityCount} high-quality reports (8+)`} style={{ fontSize: 10, background: 'rgba(92,232,200,0.2)', color: '#5CE8C8', padding: '2px 7px', borderRadius: 20, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <i className="ti ti-star" style={{ fontSize: 11 }} /> {badge.qualityCount}
+                </span>
+              )}
+            </div>
             <button
               onClick={async () => { await supabase.auth.signOut(); window.location.href = '/login' }}
-              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 11, padding: 0, marginTop: 2 }}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', fontSize: 11, padding: 0 }}
             >
               Sign out
             </button>
           </div>
         )}
       </div>
+
+      {/* Tab Navigation */}
+      <div style={{ display: 'flex', gap: 4, marginBottom: '1rem', background: '#fff', borderRadius: 'var(--radius-lg)', padding: 4, border: '0.5px solid var(--border)' }}>
+        {(['today', 'history', 'tasks'] as Tab[]).map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            style={{
+              flex: 1, padding: '8px 0', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: 'inherit',
+              fontSize: 13, fontWeight: activeTab === tab ? 600 : 400,
+              background: activeTab === tab ? 'var(--gvt-teal)' : 'transparent',
+              color: activeTab === tab ? '#fff' : 'var(--text-secondary)',
+              transition: 'all 0.15s',
+            }}
+          >
+            <i className={`ti ${tab === 'today' ? 'ti-file-text' : tab === 'history' ? 'ti-history' : 'ti-checkbox'}`} style={{ marginRight: 5 }} />
+            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          </button>
+        ))}
+      </div>
+
+      {/* History Tab */}
+      {activeTab === 'history' && <HistoryTab />}
+
+      {/* Tasks Tab */}
+      {activeTab === 'tasks' && <TasksTab />}
+
+      {/* Today Tab */}
+      {activeTab === 'today' && <>
 
       {/* Previous Report Banner */}
       {savedReport && !bannerDismissed && submitResult === null && (
@@ -521,6 +600,8 @@ export default function EODRPage() {
           </div>
         </div>
       )}
+
+      </> /* end Today tab */}
 
       <footer>Genesis Virtual Team &copy; 2025 &mdash; EODR System</footer>
     </div>
