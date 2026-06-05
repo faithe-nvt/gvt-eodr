@@ -161,7 +161,7 @@ links: ${linksText}`
     const streak = calcStreak((pastSubs ?? []).map(s => s.created_at))
     const badges: VPBadges = { streak, qualityCount }
 
-    const emailHtml = buildEmailHtml(profile.full_name, submissionDate, emailContent, badges)
+    const emailHtml = buildEmailHtml(profile.full_name, submissionDate, emailContent, badges, grading.score)
 
     // ── Save submission ──────────────────────────────────────────────────────
     const csmEmail = process.env.CSM_EMAIL ?? 'faith.e@netavirtualteam.com.au'

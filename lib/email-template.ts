@@ -24,7 +24,8 @@ export function buildEmailHtml(
   vpName: string,
   submissionDate: string,
   content: EmailContent,
-  badges?: VPBadges
+  badges?: VPBadges,
+  aiScore?: number
 ): string {
   const firstName = vpName.split(' ')[0]
 
@@ -191,7 +192,11 @@ export function buildEmailHtml(
                 <td style="padding:16px 28px;text-align:right;vertical-align:middle;">
                   <div style="font-family:'DM Mono',monospace;font-size:8px;letter-spacing:0.2em;text-transform:uppercase;color:#4a9a9b;margin-bottom:4px;">End of Day Report</div>
                   <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:#ffffff;margin-bottom:4px;">${escHtml(vpName)}</div>
-                  <div style="font-family:'DM Mono',monospace;font-size:9px;color:#EBDB1E;letter-spacing:0.1em;text-transform:uppercase;">${escHtml(submissionDate)}</div>
+                  <div style="font-family:'DM Mono',monospace;font-size:9px;color:#EBDB1E;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">${escHtml(submissionDate)}</div>
+                  <div>
+                    ${aiScore != null ? `<span style="display:inline-block;background:#FF611A;color:#ffffff;font-size:9px;font-weight:700;padding:2px 9px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:0.06em;margin-right:4px;">AI SCORE ${aiScore}/10</span>` : ''}
+                    ${badges && badges.streak >= 2 ? `<span style="display:inline-block;background:rgba(255,255,255,0.12);color:#EBDB1E;font-size:9px;font-weight:600;padding:2px 9px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:0.05em;">${badges.streak}-DAY STREAK</span>` : ''}
+                  </div>
                 </td>
               </tr>
             </table>

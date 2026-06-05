@@ -51,10 +51,10 @@ OUTPUT FORMAT — return raw JSON only, no markdown fences, no preamble:
       "link": { "text": "<descriptive link label e.g. View Content Calendar>", "url": "<url>" }
     }
   ],
-  "in_progress": ["<item>", "<item>"],
+  "in_progress": ["<item — preserve the % completion exactly as given, e.g. 'Monitoring Meta ads performance (70% complete)'>", "<item>"],
   "for_your_attention": "<blocker text if exists, otherwise omit this key>",
   "recommendation": "<VP recommendation rewritten clearly, preserve original idea, omit key if none>",
-  "tomorrow_focus": ["<item>", "<item>"],
+  "tomorrow_focus": ["<item — preserve the deadline date exactly as given, e.g. 'Finalise website — Deadline: 2026-05-20'>", "<item>"],
   "work_outputs": [
     { "text": "<descriptive label>", "url": "<url>" }
   ],
