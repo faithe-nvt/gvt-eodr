@@ -363,21 +363,24 @@ export default function EODRPage() {
 
       {/* Previous Report Banner */}
       {savedReport && !bannerDismissed && submitResult === null && (
-        <div style={{ background: '#fff', border: '0.5px solid var(--gvt-teal)', borderRadius: 'var(--radius-lg)', padding: '0.9rem 1.25rem', marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <i className="ti ti-history" style={{ color: 'var(--gvt-teal)', fontSize: 18 }} />
-            <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-              Saved report from <strong>{savedReport.savedDate}</strong> — load the full report or just client and pending items.
-            </span>
+        <div style={{ background: 'linear-gradient(135deg, #f0fdf9 0%, #e6faf6 100%)', border: '1px solid rgba(45,95,94,0.15)', borderRadius: 'var(--radius-lg)', padding: '1rem 1.25rem', marginBottom: '1rem', boxShadow: '0 1px 4px rgba(45,95,94,0.08)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--gvt-teal)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <i className="ti ti-history" style={{ color: '#fff', fontSize: 16 }} />
+            </div>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--gvt-dark)' }}>Saved report from {savedReport.savedDate}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-tertiary)', marginTop: 1 }}>Choose how much to load from your last report</div>
+            </div>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => loadPrevious('full')} style={{ background: 'var(--gvt-teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
-              Load full report
+            <button onClick={() => loadPrevious('full')} style={{ background: 'var(--gvt-teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <i className="ti ti-file-text" aria-hidden="true" /> Load full report
             </button>
-            <button onClick={() => loadPrevious('partial')} style={{ background: 'none', border: '0.5px solid var(--gvt-teal)', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--gvt-teal)', fontWeight: 500 }}>
-              Load client + pending only
+            <button onClick={() => loadPrevious('partial')} style={{ background: '#fff', border: '1px solid rgba(45,95,94,0.25)', borderRadius: 'var(--radius-md)', padding: '8px 16px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--gvt-teal)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <i className="ti ti-layout-list" aria-hidden="true" /> Client + pending only
             </button>
-            <button onClick={() => setBannerDismissed(true)} style={{ background: 'none', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-tertiary)' }}>
+            <button onClick={() => setBannerDismissed(true)} style={{ background: 'none', border: 'none', padding: '8px 12px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-tertiary)' }}>
               Dismiss
             </button>
           </div>

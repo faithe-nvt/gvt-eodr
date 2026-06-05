@@ -82,34 +82,37 @@ export default function ShiftTracker({ onShiftChange, vpName }: Props) {
   if (shift.status === 'idle') {
     return (
       <div style={{
-        background: '#fff',
-        border: '0.5px solid var(--border)',
+        background: 'var(--gvt-teal)',
         borderRadius: 'var(--radius-lg)',
         padding: '1.5rem',
         marginBottom: '1rem',
         textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>👋</div>
-        <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 4 }}>
-          Good {greeting()}, {vpName.split(' ')[0]}!
+        <div style={{ position: 'relative', zIndex: 1 }}>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', marginBottom: 4, letterSpacing: '0.04em' }}>
+            {now.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })} &nbsp;·&nbsp; {formatTime(now.toISOString())}
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: '#fff', marginBottom: 6 }}>
+            Good {greeting()}, {vpName.split(' ')[0]}! 👋
+          </div>
+          <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.65)', marginBottom: 20 }}>
+            Your EODR unlocks when you end your shift. Ready to go?
+          </div>
+          <button
+            onClick={startShift}
+            style={{
+              background: '#fff', color: 'var(--gvt-teal)', border: 'none',
+              borderRadius: 'var(--radius-md)', padding: '11px 28px',
+              fontSize: 14, fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit',
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            }}
+          >
+            <i className="ti ti-player-play" aria-hidden="true" /> Start my day
+          </button>
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text-tertiary)', marginBottom: 20 }}>
-          {now.toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })} &nbsp;·&nbsp; {formatTime(now.toISOString())}
-        </div>
-        <div style={{ fontSize: 13, color: 'var(--text-secondary)', marginBottom: 20 }}>
-          Your EODR will be unlocked when you end your shift. Ready to start?
-        </div>
-        <button
-          onClick={startShift}
-          style={{
-            background: 'var(--gvt-teal)', color: '#fff', border: 'none',
-            borderRadius: 'var(--radius-md)', padding: '12px 28px',
-            fontSize: 15, fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit',
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-          }}
-        >
-          <i className="ti ti-player-play" aria-hidden="true" /> Start my day
-        </button>
       </div>
     )
   }
