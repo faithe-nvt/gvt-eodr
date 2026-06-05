@@ -723,9 +723,6 @@ function ReviewBody({ result, canSend, sent, onSent, showEmailPreview, onToggleE
             <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2 }}>{emailPreview.subject}</div>
             <div style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>{emailPreview.previewText}</div>
           </div>
-          <span style={{ fontSize: 12, fontWeight: 600, color: matchInfo.color, padding: '3px 10px', borderRadius: 20, background: '#f5f5f0', flexShrink: 0 }}>
-            {matchInfo.label}
-          </span>
         </div>
 
         {!canSend && !sent && (

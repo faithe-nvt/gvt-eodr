@@ -173,9 +173,23 @@ export default function ShiftTracker({ onShiftChange, vpName }: Props) {
           Your EODR is now unlocked. Fill it in and submit below.
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-        <i className="ti ti-circle-check" style={{ color: 'var(--gvt-teal)', fontSize: 22 }} />
-        <span style={{ fontSize: 13, color: 'var(--gvt-teal)', fontWeight: 600 }}>Ready to report</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <i className="ti ti-circle-check" style={{ color: 'var(--gvt-teal)', fontSize: 22 }} />
+          <span style={{ fontSize: 13, color: 'var(--gvt-teal)', fontWeight: 600 }}>Ready to report</span>
+        </div>
+        <button
+          onClick={startShift}
+          style={{
+            background: 'none', color: 'var(--gvt-teal)',
+            border: '0.5px solid var(--gvt-teal)',
+            borderRadius: 'var(--radius-md)', padding: '6px 12px',
+            fontSize: 12, cursor: 'pointer', fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+          }}
+        >
+          <i className="ti ti-refresh" aria-hidden="true" /> New shift
+        </button>
       </div>
     </div>
   )
