@@ -180,7 +180,7 @@ export default function EODRPage() {
     setLinks(prev => prev.map(l => l.id === id ? { ...l, [field]: value } : l))
   }
 
-  function loadPrevious() {
+  function loadPrevious(mode: 'full' | 'partial') {
     if (!savedReport) return
     if (savedReport.inProgressItems?.length) setInProgressItems(savedReport.inProgressItems)
     if (savedReport.nextActionItems?.length) setNextActionItems(savedReport.nextActionItems)
@@ -189,6 +189,20 @@ export default function EODRPage() {
       clientName: savedReport.delivery?.clientName ?? '',
       clientEmail: savedReport.delivery?.clientEmail ?? '',
     }))
+    if (mode === 'full') {
+      setForm(prev => ({
+        ...prev,
+        completed: savedReport.form?.completed ?? '',
+        blockers: savedReport.form?.blockers ?? '',
+        recommendation: savedReport.form?.recommendation ?? '',
+        tomorrow: savedReport.form?.tomorrow ?? '',
+      }))
+      if (savedReport.moodScore != null) setMoodScore(savedReport.moodScore)
+      if (savedReport.links?.length) {
+        setLinks(savedReport.links)
+        setLinkCounter(savedReport.links.length)
+      }
+    }
     setBannerDismissed(true)
   }
 
@@ -353,12 +367,15 @@ export default function EODRPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <i className="ti ti-history" style={{ color: 'var(--gvt-teal)', fontSize: 18 }} />
             <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-              Saved report from <strong>{savedReport.savedDate}</strong> — loads client, in-progress and next actions only.
+              Saved report from <strong>{savedReport.savedDate}</strong> — load the full report or just client and pending items.
             </span>
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={loadPrevious} style={{ background: 'var(--gvt-teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
-              Load last report
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button onClick={() => loadPrevious('full')} style={{ background: 'var(--gvt-teal)', color: '#fff', border: 'none', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', fontWeight: 500 }}>
+              Load full report
+            </button>
+            <button onClick={() => loadPrevious('partial')} style={{ background: 'none', border: '0.5px solid var(--gvt-teal)', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--gvt-teal)', fontWeight: 500 }}>
+              Load client + pending only
             </button>
             <button onClick={() => setBannerDismissed(true)} style={{ background: 'none', border: '0.5px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '7px 14px', fontSize: 13, cursor: 'pointer', fontFamily: 'inherit', color: 'var(--text-tertiary)' }}>
               Dismiss
