@@ -31,7 +31,7 @@ function parseJson(raw: string) {
 
   // 2. Fix literal newlines/tabs INSIDE quoted string values only
   try {
-    const fixed = cleaned.replace(/"(?:[^"\\]|\\.)*"/gs, match =>
+    const fixed = cleaned.replace(/"(?:[^"\\]|\\.)*"/g, match =>
       match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
     )
     return JSON.parse(fixed)
