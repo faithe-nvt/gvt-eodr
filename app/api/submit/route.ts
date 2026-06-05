@@ -25,20 +25,37 @@ function calcStreak(dates: string[]): number {
 
 function parseJson(raw: string) {
   const cleaned = raw.replace(/```json|```/g, '').trim()
+
+  // 1. Direct parse
+  try { return JSON.parse(cleaned) } catch {}
+
+  // 2. Fix literal newlines/tabs INSIDE quoted string values only
   try {
-    return JSON.parse(cleaned)
-  } catch {
-    // Strip control characters that break JSON (literal newlines inside strings)
-    const sanitised = cleaned.replace(/[\x00-\x09\x0B\x0C\x0E-\x1F\x7F]/g, '')
-      .replace(/\n/g, '\\n').replace(/\r/g, '')
+    const fixed = cleaned.replace(/"(?:[^"\\]|\\.)*"/gs, match =>
+      match.replace(/\n/g, '\\n').replace(/\r/g, '\\r').replace(/\t/g, '\\t')
+    )
+    return JSON.parse(fixed)
+  } catch {}
+
+  // 3. Strip all problematic control chars then retry
+  try {
+    const stripped = cleaned.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ' ')
+    return JSON.parse(stripped)
+  } catch {}
+
+  // 4. Extract the outermost JSON object
+  const match = cleaned.match(/\{[\s\S]*\}/)
+  if (match) {
+    try { return JSON.parse(match[0]) } catch {}
     try {
-      return JSON.parse(sanitised)
-    } catch {
-      const match = cleaned.match(/\{[\s\S]*\}/)
-      if (match) return JSON.parse(match[0])
-      throw new Error('Could not parse AI response as JSON')
-    }
+      const fixed = match[0].replace(/"(?:[^"\\]|\\.)*"/gs, m =>
+        m.replace(/\n/g, '\\n').replace(/\r/g, '\\r')
+      )
+      return JSON.parse(fixed)
+    } catch {}
   }
+
+  throw new Error('Could not parse AI response as JSON')
 }
 
 function checkEmailMatch(entered: string, trusted: string): string {
