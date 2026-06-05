@@ -48,7 +48,7 @@ function parseJson(raw: string) {
   if (match) {
     try { return JSON.parse(match[0]) } catch {}
     try {
-      const fixed = match[0].replace(/"(?:[^"\\]|\\.)*"/gs, m =>
+      const fixed = match[0].replace(/"(?:[^"\\]|\\.)*"/g, m =>
         m.replace(/\n/g, '\\n').replace(/\r/g, '\\r')
       )
       return JSON.parse(fixed)
